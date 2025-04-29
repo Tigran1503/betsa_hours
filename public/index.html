@@ -52,15 +52,15 @@
   <h1 style="text-align:center;">Neue Stunden erfassen</h1>
   <form id="itemForm">
     <label>
-      Tätigkeit
+      Tätigkeit *
       <input type="text" id="itemName" required placeholder="z. B. Fliesen verlegen"/>
     </label>
     <label>
-      Anfang Datum &amp; Uhrzeit
+      Anfang Datum * &amp; Uhrzeit
       <input type="datetime-local" id="startDate" required/>
     </label>
     <label>
-      Ende Datum &amp; Uhrzeit
+      Ende Datum * &amp; Uhrzeit
       <input type="datetime-local" id="endDate" required/>
     </label>
     <label>
@@ -68,14 +68,14 @@
       <input type="number" id="pauseMins" min="0" value="0"/>
     </label>
     <label>
-      Projekt
-      <select id="projectId">
+      Projekt *
+      <select id="projectId" required>
         <option value="">Bitte wählen…</option>
       </select>
     </label>
     <label>
-      Mitarbeiter
-      <select id="mitarbeiterId">
+      Mitarbeiter *
+      <select id="mitarbeiterId" required>
         <option value="">Bitte wählen…</option>
       </select>
     </label>

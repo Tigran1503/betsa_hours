@@ -9,5 +9,5 @@
       { "src": "/create-item",        "dest": "/server.js" },
       { "src": "/(.*)",               "dest": "/public/$1" }
     ]
-  }
+}
   
