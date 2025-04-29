@@ -1,0 +1,11 @@
+Auflistung der Ordnerpfade für Volume Windows
+Volumeseriennummer : 2266-6996
+C:.
+¦   .gitignore
+¦   README.md
+¦   server.js
+¦   struktur.txt
+¦   
++---public
+        index.html
+        

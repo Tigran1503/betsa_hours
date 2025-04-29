@@ -1,23 +1,24 @@
 {
-  "name": "monday_app",
+  "name": "betsa_hours",
   "version": "1.0.0",
-  "description": "Express-Frontend zum Erfassen von Stunden in einem Monday Board",
+  "description": "",
   "main": "server.js",
-  "type": "module",
   "scripts": {
-    "start": "node server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/TigranDreso/monday_app.git"
+    "url": "git+https://github.com/Tigran1503/betsa_hours.git"
   },
-  "keywords": ["monday.com","express","api","hours"],
+  "keywords": [],
   "author": "",
   "license": "ISC",
-  "engines": {
-    "node": ">=18"
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/Tigran1503/betsa_hours/issues"
   },
+  "homepage": "https://github.com/Tigran1503/betsa_hours#readme",
   "dependencies": {
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
