@@ -1,27 +1,26 @@
 {
   "name": "monday_app",
   "version": "1.0.0",
-  "main": "index.js",
+  "description": "Express-Frontend zum Erfassen von Stunden in einem Monday Board",
+  "main": "server.js",
+  "type": "module",
   "scripts": {
+    "start": "node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/TigranDreso/monday_app.git"
+    "url": "https://github.com/TigranDreso/monday_app.git"
   },
-  "keywords": [],
+  "keywords": ["monday.com","express","api","hours"],
   "author": "",
   "license": "ISC",
-  "type": "module",
-  "bugs": {
-    "url": "https://github.com/TigranDreso/monday_app/issues"
+  "engines": {
+    "node": ">=18"
   },
-  "homepage": "https://github.com/TigranDreso/monday_app#readme",
-  "description": "",
   "dependencies": {
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "node-fetch": "^3.3.2"
   }
-  
 }
