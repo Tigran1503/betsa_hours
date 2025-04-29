@@ -4,9 +4,10 @@
       { "src": "server.js", "use": "@vercel/node" }
     ],
     "routes": [
-      { "src": "/options/(.*)", "dest": "/server.js" },
-      { "src": "/create-item",     "dest": "/server.js" },
-      { "src": "/(.*)",            "dest": "/public/index.html" }
+      { "src": "/options/(.*)", "dest": "server.js" },
+      { "src": "/create-item",     "dest": "server.js" },
+      { "src": "/debug-env",       "dest": "server.js" },
+      { "src": "/(.*)",            "dest": "public/index.html" }
     ]
   }
   
