@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Neue Stunden erfassen</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f7f7f7;
+      padding: 2rem;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      max-width: 600px;
+      margin: auto;
+      background: #fff;
+      padding: 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    label {
+      display: flex;
+      flex-direction: column;
+      font-weight: 500;
+    }
+    input, select, button {
+      font-size: 1rem;
+    }
+    input, select {
+      margin-top: 0.4rem;
+      padding: 0.6rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      padding: 0.8rem;
+      background: #3b82f6;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #2563eb;
+    }
+  </style>
+</head>
+<body>
+  <h1 style="text-align:center;">Neue Stunden erfassen</h1>
+  <form id="itemForm">
+    <label>
+      Tätigkeit
+      <input type="text" id="itemName" required placeholder="z. B. Fliesen verlegen"/>
+    </label>
+    <label>
+      Anfang Datum &amp; Uhrzeit
+      <input type="datetime-local" id="startDate" required/>
+    </label>
+    <label>
+      Ende Datum &amp; Uhrzeit
+      <input type="datetime-local" id="endDate" required/>
+    </label>
+    <label>
+      Pause in Minuten
+      <input type="number" id="pauseMins" min="0" value="0"/>
+    </label>
+    <label>
+      Projekt
+      <select id="projectId" required>
+        <option value="">Bitte wählen…</option>
+      </select>
+    </label>
+    <label>
+      Mitarbeiter
+      <select id="mitarbeiterId" required>
+        <option value="">Bitte wählen…</option>
+      </select>
+    </label>
+    <button type="submit">Speichern</button>
+  </form>
+
+  <script>
+    async function loadOptions(endpoint, selectId) {
+      const res  = await fetch(endpoint);
+      const json = await res.json();
+      const sel  = document.getElementById(selectId);
+      json.items.forEach(({ id, name }) => {
+        const opt = document.createElement('option');
+        opt.value = id;
+        opt.textContent = name;
+        sel.appendChild(opt);
+      });
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      loadOptions('/options/project', 'projectId');
+      loadOptions('/options/mitarbeiter', 'mitarbeiterId');
+    });
+
+    document.getElementById('itemForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const payload = {
+        itemName:      document.getElementById('itemName').value,
+        startDate:     document.getElementById('startDate').value,
+        endDate:       document.getElementById('endDate').value,
+        pauseMins:     parseInt(document.getElementById('pauseMins').value, 10),
+        projectId:     document.getElementById('projectId').value,
+        mitarbeiterId: document.getElementById('mitarbeiterId').value
+      };
+
+      const res  = await fetch('/create-item', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const json = await res.json();
+
+      if (json.data && json.data.create_item) {
+        alert(`✅ Item erstellt (ID: ${json.data.create_item.id})`);
+      } else {
+        console.error(json);
+        alert(`❌ Fehler: ${json.error || JSON.stringify(json)}`);
+      }
+    });
+  </script>
+</body>
+</html>
