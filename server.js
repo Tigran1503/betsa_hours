@@ -164,43 +164,64 @@ app.get('/options/project', async (req,res)=>{
   }
 });
 
-/* ---------- Item anlegen (unverändert) ---------- */
-app.post('/create-item', async (req,res)=>{
-  try{
-    const {itemName,startDate,endDate,pauseMins,projectId,mitarbeiterId}=req.body;
-    if(![itemName,startDate,endDate,projectId,mitarbeiterId].every(Boolean))
-      return res.status(400).json({error:'Pflichtfelder fehlen'});
+/* ---------- Item anlegen ---------- */
+app.post('/create-item', async (req, res) => {
+  try {
+      const {
+          itemName,
+          startDate,
+          endDate,
+          pauseMins,
+          projectId,
+          mitarbeiterId
+      } = req.body;
 
-    const toUtc = l=>{
-      const d=new Date(l), iso=d.toISOString();
-      return {date:iso.slice(0,10), time:iso.slice(11,19)};
-    };
-    const s=toUtc(startDate), e=toUtc(endDate);
+      // Pflichtfelder prüfen
+      if (![itemName, startDate, endDate, projectId, mitarbeiterId].every(Boolean)) {
+          return res.status(400).json({ error: 'Pflichtfelder fehlen' });
+      }
 
-    const vals={
-      [mainColumns['Anfang Datum']]  :{date:s.date,time:s.time},
-      [mainColumns['Ende Datum']]    :{date:e.date,time:e.time},
-      [mainColumns['Pause in Mins']] :pauseMins.toString(),
-      [mainColumns['Projekt']]       :{linkedPulseIds:[{linkedPulseId:projectId}]},
-      [mainColumns['Mitarbeiter']]   :{linkedPulseIds:[{linkedPulseId:mitarbeiterId}]}
-    };
+      // Helper, um Datum + Zeit in UTC-Strings zu wandeln
+      const toUtc = l => {
+          const d = new Date(l);
+          const iso = d.toISOString();
+          return { date: iso.slice(0, 10), time: iso.slice(11, 19) };
+      };
 
-    const cvs = JSON.stringify(vals).replace(/"/g,'\\"');
-    const mut = `
-      mutation{
-        create_item(board_id:${BOARD_ID},
-          item_name:"${itemName}",
-          column_values:"${cvs}"){ id }
-      }`;
+      const s = toUtc(startDate);
+      const e = toUtc(endDate);
 
-    const r = await monday(mut, {}, 'create_item');
-    res.json({data:r});
-  }catch(e){
-    console.error(e);
-    res.status(500).json({error:e.message});
+      const vals = {
+          [mainColumns['Anfang Datum']]  : { date: s.date, time: s.time },
+          [mainColumns['Ende Datum']]    : { date: e.date, time: e.time },
+          [mainColumns['Pause in Mins']] : pauseMins.toString(),
+          [mainColumns['Projekt']]       : { linkedPulseIds: [{ linkedPulseId: projectId }] },
+          [mainColumns['Mitarbeiter']]   : { linkedPulseIds: [{ linkedPulseId: mitarbeiterId }] }
+      };
+
+      const cvs = JSON.stringify(vals).replace(/"/g, '\\"');
+
+      const mut = `
+        mutation {
+          create_item(
+            board_id: ${BOARD_ID},
+            item_name: "${itemName}",
+            column_values: "${cvs}"
+          ) { id }
+        }`;
+
+      await monday(mut, {}, 'create_item');
+
+      // ===============================
+      // Erfolgreich -> auf Dankeseite
+      // ===============================
+      return res.redirect(303, '/thanks.html');   // „See other“ nach POST
+  } catch (err) {
+      console.error(err);
+      // Hier entscheidest du: Fehlerseite oder JSON-Fehler
+      return res.status(500).send('Interner Serverfehler');
   }
 });
-
 /* ------------------------------------------------------------------ */
 /* 4. Server-Start                                                    */
 /* ------------------------------------------------------------------ */
