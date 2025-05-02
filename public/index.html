@@ -7,54 +7,64 @@
   <style>
     body {
       font-family: sans-serif;
-      background: #f7f7f7;
-      padding: 2rem;
+      background:#f7f7f7;
+      padding:2rem;
     }
-    form {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-      max-width: 600px;
-      margin: auto;
-      background: #fff;
-      padding: 1.5rem;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    form{
+      display:flex;
+      flex-direction:column;
+      gap:1rem;
+      max-width:600px;
+      margin:auto;
+      background:#fff;
+      padding:1.5rem;
+      border-radius:8px;
+      box-shadow:0 2px 6px rgba(0,0,0,.1);
     }
-    label {
-      display: flex;
-      flex-direction: column;
-      font-weight: 500;
+    label{display:flex;flex-direction:column;font-weight:500;}
+    input,select,button{font-size:1rem;}
+    input,select{
+      margin-top:.4rem;
+      padding:.6rem;
+      border:1px solid #ccc;
+      border-radius:4px;
     }
-    input, select, button {
-      font-size: 1rem;
+    button{
+      padding:.8rem;
+      background:#3b82f6;
+      color:#fff;
+      border:none;
+      border-radius:4px;
+      cursor:pointer;
     }
-    input, select {
-      margin-top: 0.4rem;
-      padding: 0.6rem;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-    button {
-      padding: 0.8rem;
-      background: #3b82f6;
-      color: #fff;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #2563eb;
-    }
+    button:hover{background:#2563eb;}
   </style>
 </head>
 <body>
   <h1 style="text-align:center;">Neue Stunden erfassen</h1>
+
   <form id="itemForm">
     <label>
       Tätigkeit *
       <input type="text" id="itemName" required placeholder="z. B. Fliesen verlegen"/>
     </label>
+
+    <!-- 1️⃣ Mitarbeiter zuerst -->
+    <label>
+      Mitarbeiter *
+      <select id="mitarbeiterId" required>
+        <option value="">Bitte wählen…</option>
+      </select>
+    </label>
+
+    <!-- 2️⃣ Projekte abhängig vom gewählten Mitarbeiter -->
+    <label>
+      Projekt *
+      <select id="projectId" required disabled>
+        <option value="">– zuerst Mitarbeiter wählen –</option>
+      </select>
+    </label>
+
     <label>
       Anfang Datum * &amp; Uhrzeit
       <input type="datetime-local" id="startDate" required/>
@@ -67,60 +77,92 @@
       Pause in Minuten
       <input type="number" id="pauseMins" min="0" value=""/>
     </label>
-    <label>
-      Projekt *
-      <select id="projectId" required>
-        <option value="">Bitte wählen…</option>
-      </select>
-    </label>
-    <label>
-      Mitarbeiter *
-      <select id="mitarbeiterId" required>
-        <option value="">Bitte wählen…</option>
-      </select>
-    </label>
+
     <button type="submit">Speichern</button>
   </form>
 
   <script>
-    async function loadOptions(endpoint, selectId) {
-      const res  = await fetch(endpoint);
-      const json = await res.json();
-      const sel  = document.getElementById(selectId);
-      json.items.forEach(({ id, name }) => {
-        const opt = document.createElement('option');
-        opt.value = id;
-        opt.textContent = name;
-        sel.appendChild(opt);
+    /* ---------- Helpers ---------- */
+    async function getJSON(url){
+      const r = await fetch(url);
+      if(!r.ok) throw new Error(`Request ${url} returned ${r.status}`);
+      return r.json();
+    }
+
+    /* ---------- Dropdown 1: Mitarbeiter ---------- */
+    async function loadEmployees(){
+      const sel = document.getElementById('mitarbeiterId');
+      sel.innerHTML = '<option value="">Bitte wählen…</option>';
+
+      const {items} = await getJSON('/options/mitarbeiter');
+      items.forEach(({id,name})=>{
+        const o = document.createElement('option');
+        o.value = id;
+        o.textContent = name;
+        sel.appendChild(o);
       });
     }
 
-    window.addEventListener('DOMContentLoaded', () => {
-      loadOptions('/options/project', 'projectId');
-      loadOptions('/options/mitarbeiter', 'mitarbeiterId');
-    });
+    /* ---------- Dropdown 2: Projekte pro Mitarbeiter ---------- */
+    async function loadProjects(employeeId){
+      const sel = document.getElementById('projectId');
+      sel.innerHTML = '';
+      sel.disabled = true;
 
-    document.getElementById('itemForm').addEventListener('submit', async e => {
+      const {items} = await getJSON('/options/project?mitarbeiterId=' + employeeId);
+
+      if(!items.length){
+        sel.innerHTML = '<option value="">(keine Projekte hinterlegt)</option>';
+        return;
+      }
+
+      sel.innerHTML = '<option value="">Bitte wählen…</option>';
+      items.forEach(({id,name})=>{
+        const o = document.createElement('option');
+        o.value = id;
+        o.textContent = name;
+        sel.appendChild(o);
+      });
+      sel.disabled = false;
+    }
+
+    /* ---------- Events & Init ---------- */
+    window.addEventListener('DOMContentLoaded', loadEmployees);
+
+    document.getElementById('mitarbeiterId')
+            .addEventListener('change',e=>{
+              const empId = e.target.value;
+              if(empId)  loadProjects(empId);
+              else{
+                const sel = document.getElementById('projectId');
+                sel.disabled = true;
+                sel.innerHTML = '<option value="">– zuerst Mitarbeiter wählen –</option>';
+              }
+            });
+
+    /* ---------- Formular absenden ---------- */
+    document.getElementById('itemForm').addEventListener('submit', async e=>{
       e.preventDefault();
       const payload = {
         itemName:      document.getElementById('itemName').value,
         startDate:     document.getElementById('startDate').value,
         endDate:       document.getElementById('endDate').value,
-        pauseMins:     parseInt(document.getElementById('pauseMins').value, 10),
+        pauseMins:     parseInt(document.getElementById('pauseMins').value||'0',10),
         projectId:     document.getElementById('projectId').value,
         mitarbeiterId: document.getElementById('mitarbeiterId').value
       };
 
-      const res  = await fetch('/create-item', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+      const r  = await fetch('/create-item',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify(payload)
       });
-      const json = await res.json();
+      const json = await r.json();
 
-      if (json.data && json.data.create_item) {
+      if(json.data && json.data.create_item){
         alert(`✅ Item erstellt (ID: ${json.data.create_item.id})`);
-      } else {
+        e.target.reset();
+      }else{
         console.error(json);
         alert(`❌ Fehler: ${json.error || JSON.stringify(json)}`);
       }
