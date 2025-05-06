@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Neue Ausgabe erfassen</title>
+  <style>
+    body{
+      font-family:sans-serif;
+      background:#f7f7f7;
+      padding:2rem;
+    }
+    .back-button {
+      display: inline-block;
+      margin-bottom: 1.5rem;
+      padding: .6rem 1rem;
+      background: #ccc;
+      color: #000;
+      text-decoration: none;
+      border-radius: 4px;
+      font-size: 0.9rem;
+    }
+    .back-button:hover {
+      background:#bbb;
+    }
+    form{
+      display:flex;
+      flex-direction:column;
+      gap:1rem;
+      max-width:600px;
+      margin:auto;
+      background:#fff;
+      padding:1.5rem;
+      border-radius:8px;
+      box-shadow:0 2px 6px rgba(0,0,0,.1);
+    }
+    label{display:flex;flex-direction:column;font-weight:500;}
+    input,select,button,textarea{font-size:1rem;}
+    input,select,textarea{
+      margin-top:.4rem;
+      padding:.6rem;
+      border:1px solid #ccc;
+      border-radius:4px;
+    }
+    textarea { resize: vertical; min-height:60px; }
+    button{
+      padding:.8rem;
+      background:#3b82f6;
+      color:#fff;
+      border:none;
+      border-radius:4px;
+      cursor:pointer;
+    }
+    button:hover{background:#2563eb;}
+  </style>
+</head>
+<body>
+  <h1 style="text-align:center;">Neue Ausgabe erfassen</h1>
+
+  <!-- Zurück-Button -->
+  <div style="text-align:center;">
+    <a href="../index.html" class="back-button">← Zurück</a>
+  </div>
+
+  <!-- Formular -->
+  <form id="expenseForm">
+    <label>
+      Ausgabe (Titel) *
+      <input type="text" id="itemName" required placeholder="z. B. Baumarkt Quittung" />
+    </label>
+
+    <label>
+      Beschreibung
+      <textarea id="beschreibung" placeholder="Optional, z. B. Belegnummer, Details ..."></textarea>
+    </label>
+
+    <label>
+      Summe von Ausgabe (EUR) *
+      <input type="number" id="betrag" required step="0.01" min="0" placeholder="z.B. 154.35" />
+    </label>
+
+    <!-- Mitarbeiter -->
+    <label>
+      Mitarbeiter *
+      <select id="mitarbeiterId" required>
+        <option value="">Bitte wählen…</option>
+      </select>
+    </label>
+
+    <!-- Projekt (abhängig von Mitarbeiter) -->
+    <label>
+      Projekt *
+      <select id="projectId" required disabled>
+        <option value="">– zuerst Mitarbeiter wählen –</option>
+      </select>
+    </label>
+
+    <button type="submit">Speichern</button>
+  </form>
+
+  <script>
+    /* ---------------- Helpers ---------------- */
+    async function getJSON(url){
+      const r = await fetch(url);
+      if(!r.ok) throw new Error(`Request ${url} returned ${r.status}`);
+      return r.json();
+    }
+
+    /* -------------- Dropdown 1: Mitarbeiter -------------- */
+    async function loadEmployees(){
+      const sel = document.getElementById('mitarbeiterId');
+      sel.innerHTML = '<option value="">Bitte wählen…</option>';
+      const {items} = await getJSON('/options/mitarbeiter');
+      items.forEach(({id,name})=>{
+        const o = document.createElement('option');
+        o.value = id;
+        o.textContent = name;
+        sel.appendChild(o);
+      });
+    }
+
+    /* ------------- Dropdown 2: Projekte pro MA ------------ */
+    async function loadProjects(employeeId){
+      const sel = document.getElementById('projectId');
+      sel.innerHTML = '';
+      sel.disabled = true;
+      const {items} = await getJSON('/options/project?mitarbeiterId=' + employeeId);
+      if(!items.length){
+        sel.innerHTML = '<option value="">(keine Projekte hinterlegt)</option>';
+        return;
+      }
+      sel.innerHTML = '<option value="">Bitte wählen…</option>';
+      items.forEach(({id,name})=>{
+        const o = document.createElement('option');
+        o.value = id;
+        o.textContent = name;
+        sel.appendChild(o);
+      });
+      sel.disabled = false;
+    }
+
+    /* ---------------- Events & Initialisierung ------------- */
+    window.addEventListener('DOMContentLoaded', loadEmployees);
+
+    document.getElementById('mitarbeiterId')
+      .addEventListener('change', e=>{
+        const empId = e.target.value;
+        if(empId){
+          loadProjects(empId);
+        }else{
+          const sel = document.getElementById('projectId');
+          sel.disabled = true;
+          sel.innerHTML = '<option value="">– zuerst Mitarbeiter wählen –</option>';
+        }
+      });
+
+    /* ---------------- Formular absenden -------------------- */
+    document.getElementById('expenseForm').addEventListener('submit', async e=>{
+      e.preventDefault();
+
+      /* --- Daten einsammeln --- */
+      const payload = {
+        itemName: document.getElementById('itemName').value,
+        beschreibung: document.getElementById('beschreibung').value,
+        betrag: parseFloat(document.getElementById('betrag').value),
+        projectId: document.getElementById('projectId').value,
+        mitarbeiterId: document.getElementById('mitarbeiterId').value
+      };
+
+      try{
+        const r = await fetch('/create-expense', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if(r.redirected){
+          window.location.href = r.url;
+          return;
+        }
+
+        if(r.ok){
+          const json = await r.json();
+          alert(`✅ Ausgabe erfasst (ID: ${json.data.create_expense.id})`);
+          e.target.reset();
+          return;
+        }
+
+        let msg = `Serverfehler (${r.status})`;
+        try{
+          const err = await r.json();
+          msg = err.error || JSON.stringify(err);
+        }catch{/* ignore */}
+        alert('❌ ' + msg);
+      }catch(err){
+        console.error(err);
+        alert('❌ Netz- oder Serverfehler: ' + err.message);
+      }
+    });
+  </script>
+</body>
+</html>

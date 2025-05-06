@@ -8,7 +8,8 @@ dotenv.config();
 const app        = express();
 const PORT       = process.env.PORT || 3000;
 const MONDAY_URL = 'https://api.monday.com/v2';
-const BOARD_ID   = process.env.BOARD_ID;          // Haupt-Board
+const BOARD_ID   = process.env.BOARD_ID;          // Haupt-Board für Stunden
+const EXPENSES_BOARD_ID = process.env.EXPENSES_BOARD_ID; // Board für Ausgaben
 const TOKEN      = process.env.MONDAY_API_TOKEN;
 
 /* ------------------------------------------------------------------ */
@@ -77,13 +78,22 @@ async function fetchAllItems(boardId) {
 /* ------------------------------------------------------------------ */
 /* 2. Initialisierung                                                 */
 /* ------------------------------------------------------------------ */
-const mainColumns = {};  // Stunden-Board
+const mainColumns = {};     // Stunden-Board
+const expenseColumns = {};  // Expense-Board
+
 let employeeBoardId = null;
 
 async function init() {
+  // Stunden-Board (BOARD_ID)
   const cols = await getBoardColumns(BOARD_ID);
   for (const [t,o] of Object.entries(cols)) mainColumns[t] = o.id;
 
+  // Expense-Board (EXPENSES_BOARD_ID)
+  if (!EXPENSES_BOARD_ID) throw new Error('❌ EXPENSES_BOARD_ID nicht definiert');
+  const expenseCols = await getBoardColumns(EXPENSES_BOARD_ID);
+  for (const [t,o] of Object.entries(expenseCols)) expenseColumns[t] = o.id;
+
+  // Mitarbeiter-Relation aus Stundenerfassung extrahieren (gleicher Aufbau für Projekte)
   const mitSettings = cols['Mitarbeiter']?.settings;
   employeeBoardId   =
         mitSettings?.boardIds?.[0] ||
@@ -92,6 +102,7 @@ async function init() {
   if (!employeeBoardId) throw new Error('❌ Mitarbeiter-Board nicht gefunden');
 
   console.log('✅ Main-Columns:', mainColumns);
+  console.log('✅ Expense-Columns:', expenseColumns);
   console.log('✅ Employee Board ID:', employeeBoardId);
 }
 
@@ -164,7 +175,7 @@ app.get('/options/project', async (req,res)=>{
   }
 });
 
-/* ---------- Item anlegen ---------- */
+/* ---------- Item anlegen (Stunden) ---------- */
 app.post('/create-item', async (req, res) => {
   try {
       const {
@@ -222,6 +233,55 @@ app.post('/create-item', async (req, res) => {
       return res.status(500).send('Interner Serverfehler');
   }
 });
+
+/* ---------- Expense anlegen ---------- */
+app.post('/create-expense', async (req, res) => {
+  try {
+    const {
+      itemName,        // "Ausgabe"
+      beschreibung,    // "Beschreibung" (optional)
+      betrag,          // "Summe von Ausgabe"
+      projectId,       // "Projekt"
+      mitarbeiterId    // "Mitarbeiter"
+    } = req.body;
+
+    // Pflichtfelder prüfen
+    if (![itemName, betrag, projectId, mitarbeiterId].every(Boolean)) {
+      return res.status(400).json({ error: 'Pflichtfelder fehlen' });
+    }
+
+    // Feld-Mapping: Passe die Spalten exakt auf die Titel an, wie sie auf dem Board heißen!
+    const vals = {
+      [expenseColumns['Beschreibung']]: beschreibung || '',
+      [expenseColumns['Summe von Ausgabe']]: betrag.toString(),
+      [expenseColumns['Projekt']]: { linkedPulseIds: [{ linkedPulseId: projectId }] },
+      [expenseColumns['Mitarbeiter']]: { linkedPulseIds: [{ linkedPulseId: mitarbeiterId }] }
+    };
+
+    const cvs = JSON.stringify(vals).replace(/"/g, '\\"');
+
+    const mut = `
+      mutation {
+        create_item(
+          board_id: ${EXPENSES_BOARD_ID},
+          item_name: "${itemName}",
+          column_values: "${cvs}"
+        ) { id }
+      }`;
+
+    const data = await monday(mut, {}, 'create_expense');
+
+    // Erfolgreich -> auf Dankeseite
+    return res.redirect(303, '/thanks.html');
+    // Alternativ für API-Debugging-Ausgabe:
+    // return res.status(200).json({ data });
+
+  } catch (err) {
+    console.error(err);
+    return res.status(500).send('Interner Serverfehler');
+  }
+});
+
 /* ------------------------------------------------------------------ */
 /* 4. Server-Start                                                    */
 /* ------------------------------------------------------------------ */
