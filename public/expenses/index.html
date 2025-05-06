@@ -186,7 +186,7 @@
           return;
         }
 
-        let msg = `Serverfehler (${r.status})`;
+        let msg = `Serverfehler (${r})`;
         try{
           const err = await r.json();
           msg = err.error || JSON.stringify(err);
