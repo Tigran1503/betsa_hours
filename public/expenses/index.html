@@ -10,45 +10,24 @@
       background:#f7f7f7;
       padding:2rem;
     }
-    .back-button {
-      display: inline-block;
-      margin-bottom: 1.5rem;
-      padding: .6rem 1rem;
-      background: #ccc;
-      color: #000;
-      text-decoration: none;
-      border-radius: 4px;
-      font-size: 0.9rem;
+    .back-button{
+      display:inline-block;margin-bottom:1.5rem;padding:.6rem 1rem;
+      background:#ccc;color:#000;text-decoration:none;border-radius:4px;
+      font-size:.9rem;
     }
-    .back-button:hover {
-      background:#bbb;
-    }
+    .back-button:hover{background:#bbb;}
     form{
-      display:flex;
-      flex-direction:column;
-      gap:1rem;
-      max-width:600px;
-      margin:auto;
-      background:#fff;
-      padding:1.5rem;
-      border-radius:8px;
-      box-shadow:0 2px 6px rgba(0,0,0,.1);
+      display:flex;flex-direction:column;gap:1rem;max-width:600px;margin:auto;
+      background:#fff;padding:1.5rem;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,.1);
     }
     label{display:flex;flex-direction:column;font-weight:500;}
     input,select,button,textarea{font-size:1rem;}
     input,select,textarea{
-      margin-top:.4rem;
-      padding:.6rem;
-      border:1px solid #ccc;
-      border-radius:4px;
+      margin-top:.4rem;padding:.6rem;border:1px solid #ccc;border-radius:4px;
     }
-    textarea { resize: vertical; min-height:60px; }
+    textarea{resize:vertical;min-height:60px;}
     button{
-      padding:.8rem;
-      background:#3b82f6;
-      color:#fff;
-      border:none;
-      border-radius:4px;
+      padding:.8rem;background:#3b82f6;color:#fff;border:none;border-radius:4px;
       cursor:pointer;
     }
     button:hover{background:#2563eb;}
@@ -57,29 +36,26 @@
 <body>
   <h1 style="text-align:center;">Neue Ausgabe erfassen</h1>
 
-  <!-- Zurück-Button -->
   <div style="text-align:center;">
     <a href="../index.html" class="back-button">← Zurück</a>
   </div>
 
-  <!-- Formular -->
   <form id="expenseForm">
     <label>
       Ausgabe (Titel) *
-      <input type="text" id="itemName" required placeholder="z. B. Baumarkt Quittung" />
+      <input type="text" id="itemName" required placeholder="z. B. Baumarkt-Quittung" />
     </label>
 
     <label>
       Beschreibung
-      <textarea id="beschreibung" placeholder="Optional, z. B. Belegnummer, Details ..."></textarea>
+      <textarea id="beschreibung" placeholder="Optional, z. B. Belegnummer, Details …"></textarea>
     </label>
 
     <label>
       Summe von Ausgabe (EUR) *
-      <input type="number" id="betrag" required step="0.01" min="0" placeholder="z.B. 154.35" />
+      <input type="number" id="betrag" required step="0.01" min="0" placeholder="z. B. 154.35" />
     </label>
 
-    <!-- Mitarbeiter -->
     <label>
       Mitarbeiter *
       <select id="mitarbeiterId" required>
@@ -87,12 +63,16 @@
       </select>
     </label>
 
-    <!-- Projekt (abhängig von Mitarbeiter) -->
     <label>
       Projekt *
       <select id="projectId" required disabled>
         <option value="">– zuerst Mitarbeiter wählen –</option>
       </select>
+    </label>
+
+    <label>
+      Beleg (Datei-Upload, mehrere möglich)
+      <input type="file" id="beleg" accept="*/*" multiple />
     </label>
 
     <button type="submit">Speichern</button>
@@ -155,50 +135,36 @@
       });
 
     /* ---------------- Formular absenden -------------------- */
-    document.getElementById('expenseForm').addEventListener('submit', async e=>{
+    document.getElementById('expenseForm').addEventListener('submit', async e => {
       e.preventDefault();
 
-      /* --- Daten einsammeln --- */
-      const payload = {
-        itemName: document.getElementById('itemName').value,
-        beschreibung: document.getElementById('beschreibung').value,
-        betrag: parseFloat(document.getElementById('betrag').value),
-        projectId: document.getElementById('projectId').value,
-        mitarbeiterId: document.getElementById('mitarbeiterId').value
-      };
+      const formData = new FormData();
+      formData.append('itemName',      document.getElementById('itemName').value);
+      formData.append('beschreibung',  document.getElementById('beschreibung').value);
+      formData.append('betrag',        document.getElementById('betrag').value);
+      formData.append('projectId',     document.getElementById('projectId').value);
+      formData.append('mitarbeiterId', document.getElementById('mitarbeiterId').value);
 
-      try{
-        const r = await fetch('/create-expense', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
+      const files = document.getElementById('beleg').files;
+      for(const file of files){        // alle Dateien anhängen
+        formData.append('beleg', file);
+      }
 
-        if(r.redirected){
-          window.location.href = r.url;
-          return;
-        }
+      try {
+        const r = await fetch('/create-expense', { method:'POST', body:formData });
 
-        if(r.ok){
+        if (r.redirected) { window.location = r.url; return; }
+
+        if (r.ok) {
           const json = await r.json();
-          alert(`✅ Ausgabe erfasst (ID: ${json.data.create_expense.id})`);
+          alert(`✅ Ausgabe erfasst (ID: ${json.monday_id || '–'})`);
           e.target.reset();
           return;
         }
 
-        let msg = `Serverfehler (${r.status})`;
-        try {
-          // Versuche, die Antwort als JSON zu lesen und eine Fehlermeldung daraus zu holen
-          const err = await r.clone().json();
-          msg = err?.error || msg;
-        } catch {
-          try {
-            // Fällt das JSON parsen fehl, lies als Text (z.B. bei HTML Error Page oder einfachem "string")
-            msg = await r.clone().text();
-          } catch {}
-        }
-        alert('❌ ' + msg);
-      }catch(err){
+        const txt = await r.text();
+        alert('❌ ' + txt);
+      } catch (err) {
         console.error(err);
         alert('❌ Netz- oder Serverfehler: ' + err.message);
       }
