@@ -186,11 +186,17 @@
           return;
         }
 
-        let msg = `Serverfehler (${r})`;
-        try{
-          const err = await r.json();
-          msg = err.error || JSON.stringify(err);
-        }catch{/* ignore */}
+        let msg = `Serverfehler (${r.status})`;
+        try {
+          // Versuche, die Antwort als JSON zu lesen und eine Fehlermeldung daraus zu holen
+          const err = await r.clone().json();
+          msg = err?.error || msg;
+        } catch {
+          try {
+            // Fällt das JSON parsen fehl, lies als Text (z.B. bei HTML Error Page oder einfachem "string")
+            msg = await r.clone().text();
+          } catch {}
+        }
         alert('❌ ' + msg);
       }catch(err){
         console.error(err);
