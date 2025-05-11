@@ -3,20 +3,38 @@
 <head>
   <meta charset="utf-8">
   <title>Login | Betsa Hours</title>
+  <link rel="stylesheet" href="/css/global.css">
+  <!-- Optional: nur falls du spezielle Styles für das Login brauchst -->
+  <link rel="stylesheet" href="/css/login.css">
   <script defer type="module" src="/js/login.js"></script>
-  <link rel="stylesheet" href="/css/global.css"> <!-- falls du globales CSS hast -->
-  <script defer src="/js/logout.js"></script>
 </head>
+<body class="page-layout text-center">
 
-<body>
-  <h1>Login</h1>
+  <div class="form-container">
+    <h1>Anmelden</h1>
 
-  <form id="login-form">
-    <input id="email"    type="email"    placeholder="E-Mail"    required><br>
-    <input id="password" type="password" placeholder="Passwort" required><br>
-    <button type="submit">Einloggen</button>
-  </form>
+    <form id="login-form">
+      <label for="email">
+        E-Mail
+        <input id="email" name="email" type="email" placeholder="beispiel@domain.de" required>
+      </label>
 
-  <p>Noch kein Konto? <a href="/register.html">Registrieren</a></p>
+      <label for="password">
+        Passwort
+        <input id="password" name="password" type="password" placeholder="••••••••" required>
+      </label>
+
+      <button type="submit" class="btn-primary">Einloggen</button>
+    </form>
+
+    <p>
+      Noch kein Konto? 
+      <a href="/register.html">Registrieren</a>
+    </p>
+    <p>
+      <a href="/" class="back-button">Zurück zur Startseite</a>
+    </p>
+  </div>
+
 </body>
 </html>
