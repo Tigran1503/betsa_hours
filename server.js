@@ -24,7 +24,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // erst DANACH die Routen definieren:
-app.post('/api/auth/set', (req, res) => {
+app.post('/auth/set', (req, res) => {
   const { access_token } = req.body || {};
   if (!access_token) return res.status(400).send('missing token');
 
