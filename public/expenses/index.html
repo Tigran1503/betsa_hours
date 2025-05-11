@@ -1,48 +1,28 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <link rel="stylesheet" href="/css/global.css"> <!-- falls du globales CSS hast -->
-  <script defer src="/js/logout.js"></script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
   <title>Neue Ausgabe erfassen</title>
-  <style>
-    body{
-      font-family:sans-serif;
-      background:#f7f7f7;
-      padding:2rem;
-    }
-    .back-button{
-      display:inline-block;margin-bottom:1.5rem;padding:.6rem 1rem;
-      background:#ccc;color:#000;text-decoration:none;border-radius:4px;
-      font-size:.9rem;
-    }
-    .back-button:hover{background:#bbb;}
-    form{
-      display:flex;flex-direction:column;gap:1rem;max-width:600px;margin:auto;
-      background:#fff;padding:1.5rem;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,.1);
-    }
-    label{display:flex;flex-direction:column;font-weight:500;}
-    input,select,button,textarea{font-size:1rem;}
-    input,select,textarea{
-      margin-top:.4rem;padding:.6rem;border:1px solid #ccc;border-radius:4px;
-    }
-    textarea{resize:vertical;min-height:60px;}
-    button{
-      padding:.8rem;background:#3b82f6;color:#fff;border:none;border-radius:4px;
-      cursor:pointer;
-    }
-    button:hover{background:#2563eb;}
-  </style>
-</head>
-<body>
-  <h1 style="text-align:center;">Neue Ausgabe erfassen</h1>
 
-  <div style="text-align:center;">
+  <!-- globale Styles & Logout-Script -->
+  <link rel="stylesheet" href="/css/global.css">
+  <script defer src="/js/logout.js"></script>
+</head>
+<body class="page-layout">
+  <!-- Logout oben rechts -->
+  <button id="logout-btn" class="logout-button">Logout</button>
+
+  <!-- Seitentitel -->
+  <h1 class="page-title text-center">Neue Ausgabe erfassen</h1>
+
+  <!-- Zurück-Link -->
+  <div class="text-center">
     <a href="../index.html" class="back-button">← Zurück</a>
   </div>
 
-  <form id="expenseForm">
+  <!-- Formular -->
+  <form id="expenseForm" class="form-container">
     <label>
       Ausgabe (Titel) *
       <input type="text" id="itemName" required placeholder="z. B. Baumarkt-Quittung" />
@@ -77,7 +57,7 @@
       <input type="file" id="beleg" accept="*/*" multiple />
     </label>
 
-    <button type="submit">Speichern</button>
+    <button type="submit" class="btn-primary">Speichern</button>
   </form>
 
   <script>

@@ -1,39 +1,66 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <link rel="stylesheet" href="/css/global.css"> <!-- falls du globales CSS hast -->
-    <script defer src="/js/logout.js"></script>
-    <meta charset="utf-8" />
-    <title>Danke!</title>
-    <style>
-        body{
-            margin:0;
-            height:100vh;
-            display:flex;
-            flex-direction:column;
-            justify-content:center;
-            align-items:center;
-            font-family:sans-serif;
-            background:#f5f7fa;
-            color:#2c3e50;
-        }
-        h1{margin-bottom:32px;}
-        button{
-            padding:12px 24px;
-            font-size:1rem;
-            background:#1976d2;
-            color:#fff;
-            border:none;
-            border-radius:4px;
-            cursor:pointer;
-        }
-        button:hover{background:#125aa6;}
-    </style>
+  <meta charset="utf-8" />
+  <title>Danke!</title>
+
+  <!-- globales CSS und Logout-CSS -->
+  <link rel="stylesheet" href="/css/global.css">
+  <style>
+    /* bestehendes Styling */
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-family: sans-serif;
+      background: #f5f7fa;
+      color: #2c3e50;
+    }
+    h1 { margin-bottom: 32px; }
+    button.form-btn {
+      padding: 12px 24px;
+      font-size: 1rem;
+      background: #1976d2;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button.form-btn:hover { background: #125aa6; }
+
+    /* Logout-Button oben rechts */
+    .logout-button {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      padding: 0.5rem 1rem;
+      background: #e74c3c;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      z-index: 1000;
+    }
+    .logout-button:hover {
+      background: #c0392b;
+    }
+  </style>
+
+  <!-- Logout-Script -->
+  <script defer src="/js/logout.js"></script>
 </head>
 <body>
-    <h1>Vielen Dank für deine Eingabe!</h1>
-    <button onclick="window.location.href='/'">
-        Noch ein Formular einreichen
-    </button>
+  <!-- Logout-Button -->
+  <button id="logout-btn" class="logout-button">Logout</button>
+
+  <!-- Dein vorhandener Inhalt -->
+  <h1>Vielen Dank für deine Eingabe!</h1>
+  <button class="form-btn" onclick="window.location.href='/'">
+    Noch ein Formular einreichen
+  </button>
 </body>
 </html>
