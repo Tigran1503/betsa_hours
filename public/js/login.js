@@ -24,12 +24,12 @@ document
     }
 
     /* 2. Session-JWT beim Backend als HttpOnly-Cookie ablegen */
-    const resp = await fetch('/auth/set', {
-        method      : 'POST',
-        headers     : { 'Content-Type': 'application/json' },
-        credentials : 'same-origin',              // ← NEU
-        body        : JSON.stringify({ access_token: data.session.access_token })
-      })
+    const resp = await fetch('/api/auth/set', {   //  ← /api/…
+      method      : 'POST',
+      headers     : { 'Content-Type': 'application/json' },
+      credentials : 'include',                    // kann gleich bleiben
+      body        : JSON.stringify({ access_token: data.session.access_token })
+    })
 
     if (!resp.ok) {
       alert('Konnte Session-Cookie nicht setzen')
