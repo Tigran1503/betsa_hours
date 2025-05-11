@@ -8,6 +8,7 @@
     { "src": "/options/(.*)",       "dest": "/server.js" },
     { "src": "/create-item",        "dest": "/server.js" },
     { "src": "/create-expense",     "dest": "/server.js" },
-    { "src": "/(.*)",               "dest": "/public/$1" }
+    { "src": "/(.*)",               "dest": "/public/$1" },
+    { "src": "/auth/(.*)", "dest": "/server.js" }
   ]
 }

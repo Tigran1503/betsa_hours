@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>Registrieren | Meine App</title>
+
+  <!--
+    1) Wir binden das Supabase-SDK per ES-Module von jsDelivr ein.
+    2) Die beiden Platzhalter {{SUPABASE_URL}} und {{SUPABASE_ANON_KEY}}
+       ersetzt du entweder manuell beim lokalen Testen
+       oder automatisierst das später im Build-Prozess / via Vercel-Env-API.
+  -->
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+
+    /* ----------  Konfiguration  ---------- */
+    const SUPABASE_URL  = 'https://miocwppzogkspjljrtdd.supabase.co'
+    const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1pb2N3cHB6b2drc3BqbGpydGRkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY5NjQ4MzMsImV4cCI6MjA2MjU0MDgzM30.Zor-x14LXoM7jp3OOVO3xwfqnjELb145CLfFACLMBTM'
+
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
+
+    /* ----------  Helpers  ---------- */
+    const $ = (sel) => document.querySelector(sel)
+    const show = (el) => el.classList.remove('hidden')
+    const hide = (el) => el.classList.add('hidden')
+
+    /* ----------  Haupt-Logik  ---------- */
+    const form      = $('#register-form')
+    const errorBox  = $('#error')
+    const infoBox   = $('#info')
+    const spinner   = $('#spinner')
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault()
+      hide(errorBox); hide(infoBox); show(spinner)
+
+      const email    = $('#email').value.trim()
+      const password = $('#password').value.trim()
+      const repeat   = $('#repeat').value.trim()
+
+      if (password !== repeat) {
+        hide(spinner)
+        errorBox.textContent = 'Passwörter stimmen nicht überein.'
+        return show(errorBox)
+      }
+
+      /* Registrierung bei Supabase */
+      const { data, error } = await supabase.auth.signUp({ email, password })
+
+      hide(spinner)
+
+      if (error) {
+        errorBox.textContent = error.message
+        return show(errorBox)
+      }
+
+      /* Supabase liefert ein session-Objekt,
+         wenn „Email Confirm“ in den Auth-Einstellungen AUS ist.
+         Andernfalls ist data.session = null, bis der User den Link klickt.
+      */
+      if (data.session) {
+        /* === Auto-Login: JWT-Cookie auf dem Server setzen === */
+        await fetch('/auth/set', {
+          method : 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body   : JSON.stringify({ access_token: data.session.access_token })
+        })
+        window.location = '/index.html'
+      } else {
+        infoBox.textContent =
+          'Fast geschafft! Bitte bestätige deine E-Mail-Adresse über den Link, ' +
+          'den wir dir gerade geschickt haben. Danach kannst du dich einloggen.'
+        show(infoBox)
+        form.reset()
+      }
+    })
+  </script>
+
+  <style>
+    body   { font-family: system-ui, sans-serif; padding: 2rem; }
+    input  { padding: .5rem; margin: .25rem 0; width: 100%; max-width: 320px; }
+    button { padding: .5rem 1rem; margin-top: .5rem; }
+    .hidden { display: none; }
+    #error { color: #c00; margin-top: .5rem; }
+    #info  { color: #090; margin-top: .5rem; }
+    #spinner { margin-top: .5rem; }
+  </style>
+</head>
+
+<body>
+  <h1>Registrieren</h1>
+
+  <form id="register-form" autocomplete="off">
+    <label>
+      E-Mail<br>
+      <input id="email" type="email" placeholder="you@example.com" required />
+    </label><br>
+
+    <label>
+      Passwort<br>
+      <input id="password" type="password" minlength="6"
+             placeholder="mind. 6 Zeichen" required />
+    </label><br>
+
+    <label>
+      Passwort wiederholen<br>
+      <input id="repeat" type="password" minlength="6" required />
+    </label><br>
+
+    <button type="submit">Konto erstellen</button>
+  </form>
+
+  <!-- Feedback-Elemente -->
+  <div id="spinner" class="hidden">⏳ Bitte warten …</div>
+  <div id="error"   class="hidden"></div>
+  <div id="info"    class="hidden"></div>
+
+  <p>Schon registriert? <a href="/login.html">Zum Login</a></p>
+</body>
+</html>
